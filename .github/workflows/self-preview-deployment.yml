@@ -63,10 +63,7 @@ jobs:
         run: |
           branch_name=$(echo "${{ github.ref }}" | sed 's/refs\/heads\///')
           cleaned_branch_name=$(echo "$branch_name" | sed 's/[^a-zA-Z0-9_-]//g')
-          commit_sha=$(echo "${{ github.sha }}" | cut -c1-7)
-          deployment_name="preview-${cleaned_branch_name}-${commit_sha}"
-          echo "deployment_name=$deployment_name" >> $GITHUB_ENV
-          echo "Deployment name: $deployment_name"
+          echo "deployment_name=$cleaned_branch_name" >> $GITHUB_ENV
 
       - name: Create deployment on Revopush
         run: |
@@ -74,10 +71,8 @@ jobs:
           revopush deployment add \
             SelfPreviewAndroid \
             ${{ env.deployment_name }} -k --format json || true
-        working-directory: rn-self-serve-preview
 
       - name: Create Raw JS Bundle
-        working-directory: rn-self-serve-preview
         run: |
           echo "Creating output directory for bundle..."
           mkdir -p ./android-assets
@@ -90,7 +85,6 @@ jobs:
             --assets-dest ./android-assets
 
       - name: Compile Bundle into Hermes Bytecode
-        working-directory: rn-self-serve-preview
         run: |
           echo "Compiling bundle with Hermes..."
           HERMESC_PATH="./node_modules/react-native/sdks/hermesc/linux64-bin/hermesc"
@@ -110,7 +104,6 @@ jobs:
             "${{ format('>={0}.0.0 <{0}.1000.0', needs.get_version.outputs.major_version) }}" \
             -d ${{ env.deployment_name }} \
             --description "Preview deployment from branch ${{ github.ref_name }} (commit ${{ github.sha }})"
-        working-directory: rn-self-serve-preview
 
   ios_preview_deployment:
     needs: get_version
@@ -149,10 +142,7 @@ jobs:
         run: |
           branch_name=$(echo "${{ github.ref }}" | sed 's/refs\/heads\///')
           cleaned_branch_name=$(echo "$branch_name" | sed 's/[^a-zA-Z0-9_-]//g')
-          commit_sha=$(echo "${{ github.sha }}" | cut -c1-7)
-          deployment_name="preview-${cleaned_branch_name}-${commit_sha}"
-          echo "deployment_name=$deployment_name" >> $GITHUB_ENV
-          echo "Deployment name: $deployment_name"
+          echo "deployment_name=$cleaned_branch_name" >> $GITHUB_ENV
 
       - name: Create deployment on Revopush
         run: |
@@ -160,10 +150,8 @@ jobs:
           revopush deployment add \
             SelfPreviewIOS \
             ${{ env.deployment_name }} -k --format json || true
-        working-directory: rn-self-serve-preview
 
       - name: Create Raw JS Bundle for iOS
-        working-directory: rn-self-serve-preview
         run: |
           echo "Creating output directory for iOS bundle..."
           mkdir -p ./ios-assets
@@ -176,7 +164,6 @@ jobs:
             --assets-dest ./ios-assets
 
       - name: Compile Bundle into Hermes Bytecode for iOS
-        working-directory: rn-self-serve-preview
         run: |
           echo "Compiling bundle with Hermes for iOS..."
           HERMESC_PATH="./node_modules/react-native/sdks/hermesc/linux64-bin/hermesc"
@@ -189,7 +176,6 @@ jobs:
           echo "Hermes compilation for iOS successful."
 
       - name: Release Compiled Assets to Revopush for iOS
-        working-directory: rn-self-serve-preview
         run: |
           echo "Uploading compiled bundle and assets for iOS..."
           revopush release \
