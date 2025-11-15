@@ -16,10 +16,20 @@ jobs:
       - name: Get Version
         id: get_version
         run: |
-          VERSION=$(grep "versionName" rn-self-serve-preview/android/app/build.gradle | sed -E 's/.*versionName "([^"]+)".*/\1/')
+          VERSION=$(grep "versionName" ./android/app/build.gradle | sed -E 's/.*versionName "([^"]+)".*/\1/')
+          if [ -z "$VERSION" ]; then
+            echo "Error: Failed to extract version from build.gradle"
+            exit 1
+          fi
           MAJOR_VERSION=$(echo $VERSION | cut -d. -f1)
+          if [ -z "$MAJOR_VERSION" ]; then
+            echo "Error: Failed to extract major version from $VERSION"
+            exit 1
+          fi
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "major_version=$MAJOR_VERSION" >> $GITHUB_OUTPUT
+          echo "Version extracted: $VERSION"
+          echo "Major version extracted: $MAJOR_VERSION"
 
       - name: Print Version
         run: |
@@ -96,12 +106,24 @@ jobs:
           $HERMESC_PATH -emit-binary -out=./android-assets/index.android.bundle ./android-assets/index.android.bundle
           echo "Hermes compilation successful."
 
+      - name: Prepare version range for Revopush
+        id: version_range
+        run: |
+          MAJOR_VERSION="${{ needs.get_version.outputs.major_version }}"
+          if [ -z "$MAJOR_VERSION" ]; then
+            echo "Error: Major version is empty. Cannot construct version range."
+            exit 1
+          fi
+          VERSION_RANGE=">=${MAJOR_VERSION}.0.0 <${MAJOR_VERSION}.1000.0"
+          echo "version_range=$VERSION_RANGE" >> $GITHUB_OUTPUT
+          echo "Version range: $VERSION_RANGE"
+
       - name: Deploy Android OTA to Revopush
         run: |
           revopush release \
             SelfPreviewAndroid \
             ./android-assets \
-            "${{ format('>={0}.0.0 <{0}.1000.0', needs.get_version.outputs.major_version) }}" \
+            "${{ steps.version_range.outputs.version_range }}" \
             -d ${{ env.deployment_name }} \
             --description "Preview deployment from branch ${{ github.ref_name }} (commit ${{ github.sha }})"
 
@@ -175,12 +197,24 @@ jobs:
           $HERMESC_PATH -emit-binary -out=./ios-assets/main.jsbundle ./ios-assets/main.jsbundle
           echo "Hermes compilation for iOS successful."
 
+      - name: Prepare version range for Revopush (iOS)
+        id: version_range_ios
+        run: |
+          MAJOR_VERSION="${{ needs.get_version.outputs.major_version }}"
+          if [ -z "$MAJOR_VERSION" ]; then
+            echo "Error: Major version is empty. Cannot construct version range."
+            exit 1
+          fi
+          VERSION_RANGE=">=${MAJOR_VERSION}.0.0 <${MAJOR_VERSION}.1000.0"
+          echo "version_range=$VERSION_RANGE" >> $GITHUB_OUTPUT
+          echo "Version range: $VERSION_RANGE"
+
       - name: Release Compiled Assets to Revopush for iOS
         run: |
           echo "Uploading compiled bundle and assets for iOS..."
           revopush release \
             SelfPreviewIOS \
             ./ios-assets \
-            "${{ format('>={0}.0.0 <{0}.1000.0', needs.get_version.outputs.major_version) }}" \
+            "${{ steps.version_range_ios.outputs.version_range }}" \
             -d ${{ env.deployment_name }} \
             --description "Preview deployment from branch ${{ github.ref_name }} (commit ${{ github.sha }})"
