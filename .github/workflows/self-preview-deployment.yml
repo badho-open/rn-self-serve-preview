@@ -1,0 +1,206 @@
+name: Self Preview Deployment
+
+on:
+  push:
+
+jobs:
+  get_version:
+    runs-on: ubuntu-latest
+    name: App Version Extraction
+    outputs:
+      version: ${{ steps.get_version.outputs.version }}
+      major_version: ${{ steps.get_version.outputs.major_version }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Get Version
+        id: get_version
+        run: |
+          VERSION=$(grep "versionName" rn-self-serve-preview/android/app/build.gradle | sed -E 's/.*versionName "([^"]+)".*/\1/')
+          MAJOR_VERSION=$(echo $VERSION | cut -d. -f1)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "major_version=$MAJOR_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Print Version
+        run: |
+          echo "Version: ${{ steps.get_version.outputs.version }}"
+          echo "Major Version: ${{ steps.get_version.outputs.major_version }}"
+
+  android_preview_deployment:
+    needs: get_version
+    if: ${{ needs.get_version.result == 'success' }}
+    name: Android Preview Deployment
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Targeted Clean for JS Bundler Cache
+        run: |
+          echo "--- Starting targeted clean ---"
+          echo "Clearing global Metro cache to prevent JS contamination..."
+          rm -rf /tmp/metro-*
+          echo "--- Clean finished ---"
+        shell: bash
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.19.0'
+
+      - name: Install dependencies
+        run: |
+          cd rn-self-serve-preview
+          npm install
+        shell: bash
+
+      - name: Setup Revopush CLI
+        uses: 'revopush/revopush-github-action@v1.0.0'
+        id: setup-revopush-cli
+        with:
+          version: 'latest'
+          accessKey: ${{ secrets.GH_REVOPUSH_ACCESS_KEY }}
+
+      - name: Determine deployment name
+        id: set-deployment-name
+        run: |
+          branch_name=$(echo "${{ github.ref }}" | sed 's/refs\/heads\///')
+          cleaned_branch_name=$(echo "$branch_name" | sed 's/[^a-zA-Z0-9_-]//g')
+          commit_sha=$(echo "${{ github.sha }}" | cut -c1-7)
+          deployment_name="preview-${cleaned_branch_name}-${commit_sha}"
+          echo "deployment_name=$deployment_name" >> $GITHUB_ENV
+          echo "Deployment name: $deployment_name"
+
+      - name: Create deployment on Revopush
+        run: |
+          set +e
+          revopush deployment add \
+            SelfPreviewAndroid \
+            ${{ env.deployment_name }} -k --format json || true
+        working-directory: rn-self-serve-preview
+
+      - name: Create Raw JS Bundle
+        working-directory: rn-self-serve-preview
+        run: |
+          echo "Creating output directory for bundle..."
+          mkdir -p ./android-assets
+          echo "Creating raw JavaScript bundle..."
+          npx react-native bundle \
+            --platform android \
+            --dev false \
+            --entry-file index.js \
+            --bundle-output ./android-assets/index.android.bundle \
+            --assets-dest ./android-assets
+
+      - name: Compile Bundle into Hermes Bytecode
+        working-directory: rn-self-serve-preview
+        run: |
+          echo "Compiling bundle with Hermes..."
+          HERMESC_PATH="./node_modules/react-native/sdks/hermesc/linux64-bin/hermesc"
+          if [ ! -f "$HERMESC_PATH" ]; then
+            echo "Linux Hermes compiler not found at path: $HERMESC_PATH"
+            exit 1
+          fi
+          echo "Found Hermes Compiler at: $HERMESC_PATH"
+          $HERMESC_PATH -emit-binary -out=./android-assets/index.android.bundle ./android-assets/index.android.bundle
+          echo "Hermes compilation successful."
+
+      - name: Deploy Android OTA to Revopush
+        run: |
+          revopush release \
+            SelfPreviewAndroid \
+            ./android-assets \
+            "${{ format('>={0}.0.0 <{0}.1000.0', needs.get_version.outputs.major_version) }}" \
+            -d ${{ env.deployment_name }} \
+            --description "Preview deployment from branch ${{ github.ref_name }} (commit ${{ github.sha }})"
+        working-directory: rn-self-serve-preview
+
+  ios_preview_deployment:
+    needs: get_version
+    if: ${{ needs.get_version.result == 'success' }}
+    name: iOS Preview Deployment
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Targeted Clean for JS Bundler Cache
+        run: |
+          echo "--- Starting targeted clean ---"
+          echo "Clearing global Metro cache to prevent JS contamination..."
+          rm -rf /tmp/metro-*
+          echo "--- Clean finished ---"
+        shell: bash
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.19.0'
+
+      - name: Install dependencies
+        run: |
+          cd rn-self-serve-preview
+          npm install
+        shell: bash
+
+      - name: Setup Revopush CLI
+        uses: 'revopush/revopush-github-action@v1.0.0'
+        id: setup-revopush-cli
+        with:
+          version: 'latest'
+          accessKey: ${{ secrets.GH_REVOPUSH_ACCESS_KEY }}
+
+      - name: Determine deployment name
+        id: set-deployment-name
+        run: |
+          branch_name=$(echo "${{ github.ref }}" | sed 's/refs\/heads\///')
+          cleaned_branch_name=$(echo "$branch_name" | sed 's/[^a-zA-Z0-9_-]//g')
+          commit_sha=$(echo "${{ github.sha }}" | cut -c1-7)
+          deployment_name="preview-${cleaned_branch_name}-${commit_sha}"
+          echo "deployment_name=$deployment_name" >> $GITHUB_ENV
+          echo "Deployment name: $deployment_name"
+
+      - name: Create deployment on Revopush
+        run: |
+          set +e
+          revopush deployment add \
+            SelfPreviewIOS \
+            ${{ env.deployment_name }} -k --format json || true
+        working-directory: rn-self-serve-preview
+
+      - name: Create Raw JS Bundle for iOS
+        working-directory: rn-self-serve-preview
+        run: |
+          echo "Creating output directory for iOS bundle..."
+          mkdir -p ./ios-assets
+          echo "Creating raw JavaScript bundle for iOS..."
+          npx react-native bundle \
+            --platform ios \
+            --dev false \
+            --entry-file index.js \
+            --bundle-output ./ios-assets/main.jsbundle \
+            --assets-dest ./ios-assets
+
+      - name: Compile Bundle into Hermes Bytecode for iOS
+        working-directory: rn-self-serve-preview
+        run: |
+          echo "Compiling bundle with Hermes for iOS..."
+          HERMESC_PATH="./node_modules/react-native/sdks/hermesc/linux64-bin/hermesc"
+          if [ ! -f "$HERMESC_PATH" ]; then
+            echo "Linux Hermes compiler not found at path: $HERMESC_PATH"
+            exit 1
+          fi
+          echo "Found Hermes Compiler at: $HERMESC_PATH"
+          $HERMESC_PATH -emit-binary -out=./ios-assets/main.jsbundle ./ios-assets/main.jsbundle
+          echo "Hermes compilation for iOS successful."
+
+      - name: Release Compiled Assets to Revopush for iOS
+        working-directory: rn-self-serve-preview
+        run: |
+          echo "Uploading compiled bundle and assets for iOS..."
+          revopush release \
+            SelfPreviewIOS \
+            ./ios-assets \
+            "${{ format('>={0}.0.0 <{0}.1000.0', needs.get_version.outputs.major_version) }}" \
+            -d ${{ env.deployment_name }} \
+            --description "Preview deployment from branch ${{ github.ref_name }} (commit ${{ github.sha }})"
