@@ -1,6 +1,7 @@
 #import "AppDelegate.h"
 
 #import <React/RCTBundleURLProvider.h>
+#import <CodePush/CodePush.h>
 
 @implementation AppDelegate
 
@@ -24,7 +25,12 @@
 #if DEBUG
   return [[RCTBundleURLProvider sharedSettings] jsBundleURLForBundleRoot:@"index"];
 #else
-  return [[NSBundle mainBundle] URLForResource:@"main" withExtension:@"jsbundle"];
+  NSURL *codePushURL = [CodePush bundleURL];
+  if (codePushURL) {
+    return codePushURL;
+  }
+  // Fallback to default bundle if CodePush URL is not available
+  return [[RCTBundleURLProvider sharedSettings] jsBundleURLForBundleRoot:@"index"];
 #endif
 }
 

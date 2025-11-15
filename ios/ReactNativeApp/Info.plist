@@ -52,5 +52,9 @@
 	<array>
 		<string>MaterialIcons.ttf</string>
 	</array>
+	<key>CodePushDeploymentKey</key>
+	<string>REVOPUSH_SELF_PREVIEW_IOS_KEY</string>
+	<key>CodePushServerURL</key>
+	<string>https://api.revopush.org</string>
 </dict>
 </plist>

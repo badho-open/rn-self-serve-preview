@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">Self Preview</string>
+    <string moduleConfig="true" name="CodePushDeploymentKey">REVOPUSH_SELF_PREVIEW_ANDROID_KEY</string>
+    <string moduleConfig="true" name="CodePushServerUrl">https://api.revopush.org</string>
 </resources>

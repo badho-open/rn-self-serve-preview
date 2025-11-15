@@ -9,6 +9,7 @@ import {NavigationContainer} from '@react-navigation/native';
 import {createDrawerNavigator} from '@react-navigation/drawer';
 import {TouchableOpacity, StyleSheet} from 'react-native';
 import {MaterialIcons} from '@react-native-vector-icons/material-icons';
+import codePush from 'react-native-code-push';
 import HomeScreen from './screens/HomeScreen';
 import PreviewsScreen from './screens/PreviewsScreen';
 
@@ -53,4 +54,17 @@ const styles = StyleSheet.create({
   },
 });
 
-export default App;
+const codePushOptions = {
+  checkFrequency: codePush.CheckFrequency.ON_APP_START,
+  installMode: codePush.InstallMode.IMMEDIATE,
+  updateDialog: {
+    appendReleaseDescription: true,
+    title: 'Update available',
+    optionalUpdateMessage:
+      'An update is available. Would you like to install it?',
+    optionalInstallButtonLabel: 'Install',
+    optionalIgnoreButtonLabel: 'Ignore',
+  },
+};
+
+export default codePush(codePushOptions)(App);
