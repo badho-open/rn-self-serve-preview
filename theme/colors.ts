@@ -24,6 +24,6 @@ export const colors = {
   white: '#FFFFFF',
   black: '#000000',
   // Gradients
-  gradientStart: '#6a11cb',
-  gradientEnd: '#2575fc',
+  gradientStart: '#11998e',
+  gradientEnd: '#38ef7d',
 };
