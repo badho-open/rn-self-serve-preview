@@ -75,8 +75,14 @@ jobs:
         id: set-deployment-name
         run: |
           branch_name=$(echo "${{ github.ref }}" | sed 's/refs\/heads\///')
-          cleaned_branch_name=$(echo "$branch_name" | sed 's/[^a-zA-Z0-9_-]//g')
-          echo "deployment_name=$cleaned_branch_name" >> $GITHUB_ENV
+          if [ "$branch_name" == "main" ]; then
+            deployment_name="Production"
+          elif [ "$branch_name" == "staging" ]; then
+            deployment_name="Staging"
+          else
+            deployment_name=$(echo "$branch_name" | sed 's/[^a-zA-Z0-9_-]//g')
+          fi
+          echo "deployment_name=$deployment_name" >> $GITHUB_ENV
 
       - name: Create deployment on Revopush
         run: |
@@ -169,8 +175,14 @@ jobs:
         id: set-deployment-name
         run: |
           branch_name=$(echo "${{ github.ref }}" | sed 's/refs\/heads\///')
-          cleaned_branch_name=$(echo "$branch_name" | sed 's/[^a-zA-Z0-9_-]//g')
-          echo "deployment_name=$cleaned_branch_name" >> $GITHUB_ENV
+          if [ "$branch_name" == "main" ]; then
+            deployment_name="Production"
+          elif [ "$branch_name" == "staging" ]; then
+            deployment_name="Staging"
+          else
+            deployment_name=$(echo "$branch_name" | sed 's/[^a-zA-Z0-9_-]//g')
+          fi
+          echo "deployment_name=$deployment_name" >> $GITHUB_ENV
 
       - name: Create deployment on Revopush
         run: |
