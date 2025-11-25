@@ -7,14 +7,19 @@ interface PreviewCardProps {
   deployment: Deployment;
   isExpanded: boolean;
   onToggle: () => void;
+  currentDeploymentKey: string | null;
+  onSwitchDeployment: (deploymentKey: string) => void;
 }
 
 const PreviewCard: React.FC<PreviewCardProps> = ({
   deployment,
   isExpanded,
   onToggle,
+  currentDeploymentKey,
+  onSwitchDeployment,
 }) => {
   const hasPackage = !!deployment.package;
+  const isCurrentDeployment = deployment.key === currentDeploymentKey;
 
   return (
     <View style={styles.card}>
@@ -50,6 +55,17 @@ const PreviewCard: React.FC<PreviewCardProps> = ({
               </View>
             )}
           </View>
+
+          {!isCurrentDeployment && (
+            <TouchableOpacity
+              style={styles.switchButton}
+              onPress={() => onSwitchDeployment(deployment.key)}
+              activeOpacity={0.7}>
+              <Text style={styles.switchButtonText}>
+                Switch to this Preview
+              </Text>
+            </TouchableOpacity>
+          )}
 
           <TouchableOpacity
             style={[
@@ -141,6 +157,18 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#1a1a1a',
     lineHeight: 22,
+  },
+  switchButton: {
+    marginTop: 16,
+    backgroundColor: '#007AFF',
+    borderRadius: 10,
+    paddingVertical: 14,
+    alignItems: 'center',
+  },
+  switchButtonText: {
+    color: '#fff',
+    fontSize: 15,
+    fontWeight: '600',
   },
   noPackageContainer: {
     padding: 20,

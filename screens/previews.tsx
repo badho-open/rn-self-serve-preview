@@ -8,8 +8,11 @@ import {
   ActivityIndicator,
   Platform,
 } from 'react-native';
+import codePush from 'react-native-code-push';
 import {fetchDeployments, Deployment} from '../utils/previews';
 import {PreviewCard} from '../components/previews';
+import ProgressModal from '../components/previews/progressModal';
+import ConfirmationModal from '../components/previews/confirmationModal';
 
 function PreviewsScreen(): React.JSX.Element {
   const [deployments, setDeployments] = useState<Deployment[]>([]);
@@ -17,10 +20,31 @@ function PreviewsScreen(): React.JSX.Element {
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [expandedCards, setExpandedCards] = useState<Set<string>>(new Set());
+  const [currentDeploymentKey, setCurrentDeploymentKey] = useState<
+    string | null
+  >(null);
+  const [isSwitching, setIsSwitching] = useState(false);
+  const [downloadProgress, setDownloadProgress] = useState(0);
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [selectedDeploymentKey, setSelectedDeploymentKey] = useState<
+    string | null
+  >(null);
 
   useEffect(() => {
     handleFetchDeployments();
+    handleFetchCurrentDeployment();
   }, []);
+
+  const handleFetchCurrentDeployment = async () => {
+    try {
+      const update = await codePush.getUpdateMetadata();
+      if (update) {
+        setCurrentDeploymentKey(update.deploymentKey);
+      }
+    } catch (err) {
+      console.error('Failed to get current deployment key', err);
+    }
+  };
 
   const handleFetchDeployments = async () => {
     try {
@@ -34,6 +58,46 @@ function PreviewsScreen(): React.JSX.Element {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleSwitchDeployment = (deploymentKey: string) => {
+    setSelectedDeploymentKey(deploymentKey);
+    setShowConfirmation(true);
+  };
+
+  const onConfirmSwitch = () => {
+    if (!selectedDeploymentKey) {
+      return;
+    }
+    setShowConfirmation(false);
+    setIsSwitching(true);
+    setDownloadProgress(0);
+
+    codePush.sync(
+      {
+        deploymentKey: selectedDeploymentKey,
+        installMode: codePush.InstallMode.IMMEDIATE,
+      },
+      status => {
+        if (status === codePush.SyncStatus.UPDATE_INSTALLED) {
+          setIsSwitching(false);
+          // The restart is handled by CodePush's IMMEDIATE install mode.
+        } else if (
+          status === codePush.SyncStatus.UP_TO_DATE ||
+          status === codePush.SyncStatus.UNKNOWN_ERROR
+        ) {
+          setIsSwitching(false);
+        }
+      },
+      ({receivedBytes, totalBytes}) => {
+        setDownloadProgress((receivedBytes / totalBytes) * 100);
+      },
+    );
+  };
+
+  const onCancelSwitch = () => {
+    setShowConfirmation(false);
+    setSelectedDeploymentKey(null);
   };
 
   const filteredDeployments = useMemo(() => {
@@ -113,6 +177,13 @@ function PreviewsScreen(): React.JSX.Element {
         )}
       </View>
 
+      <ProgressModal visible={isSwitching} progress={downloadProgress} />
+      <ConfirmationModal
+        visible={showConfirmation}
+        onConfirm={onConfirmSwitch}
+        onCancel={onCancelSwitch}
+      />
+
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}>
@@ -131,6 +202,8 @@ function PreviewsScreen(): React.JSX.Element {
               deployment={deployment}
               isExpanded={expandedCards.has(deployment.id)}
               onToggle={() => toggleAccordion(deployment.id)}
+              currentDeploymentKey={currentDeploymentKey}
+              onSwitchDeployment={handleSwitchDeployment}
             />
           ))
         )}
