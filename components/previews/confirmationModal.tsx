@@ -1,5 +1,7 @@
 import React from 'react';
 import {View, Text, StyleSheet, Modal, TouchableOpacity} from 'react-native';
+import LinearGradient from 'react-native-linear-gradient';
+import {theme} from '../../theme';
 
 interface ConfirmationModalProps {
   visible: boolean;
@@ -24,17 +26,23 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
           <View style={styles.buttonContainer}>
             <TouchableOpacity
               style={[styles.button, styles.cancelButton]}
-              onPress={onCancel}>
+              onPress={onCancel}
+              activeOpacity={0.7}>
               <Text style={[styles.buttonText, styles.cancelButtonText]}>
                 Cancel
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={[styles.button, styles.confirmButton]}
-              onPress={onConfirm}>
-              <Text style={[styles.buttonText, styles.confirmButtonText]}>
-                Switch
-              </Text>
+              onPress={onConfirm}
+              activeOpacity={0.8}
+              style={{flex: 1}}>
+              <LinearGradient
+                colors={[theme.colors.gradientStart, theme.colors.gradientEnd]}
+                style={[styles.button, styles.confirmButton]}>
+                <Text style={[styles.buttonText, styles.confirmButtonText]}>
+                  Switch
+                </Text>
+              </LinearGradient>
             </TouchableOpacity>
           </View>
         </View>
@@ -47,54 +55,73 @@ const styles = StyleSheet.create({
   modalContainer: {
     flex: 1,
     justifyContent: 'flex-end',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
   },
   modalContent: {
-    height: '30%',
-    backgroundColor: '#fff',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    padding: 20,
+    backgroundColor: theme.colors.surface,
+    borderTopLeftRadius: theme.metrics.radii.xl,
+    borderTopRightRadius: theme.metrics.radii.xl,
+    padding: theme.metrics.spacing.lg,
     justifyContent: 'center',
+    shadowColor: theme.colors.black,
+    shadowOffset: {
+      width: 0,
+      height: -4,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 20,
   },
   modalTitle: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    marginBottom: 15,
+    fontSize: theme.typography.fontSizes['3xl'],
+    fontFamily: theme.typography.fonts.bold,
+    color: theme.colors.text,
+    marginBottom: theme.metrics.spacing.md,
     textAlign: 'center',
   },
   modalText: {
-    fontSize: 16,
-    color: '#666',
+    fontSize: theme.typography.fontSizes.lg,
+    fontFamily: theme.typography.fonts.regular,
+    color: theme.colors.textSecondary,
     textAlign: 'center',
-    marginBottom: 20,
+    marginBottom: theme.metrics.spacing.lg,
   },
   buttonContainer: {
     flexDirection: 'row',
     justifyContent: 'space-around',
+    gap: theme.metrics.spacing.md,
   },
   button: {
     flex: 1,
-    paddingVertical: 15,
-    borderRadius: 10,
+    paddingVertical: theme.metrics.spacing.md,
+    borderRadius: theme.metrics.radii.md,
     alignItems: 'center',
-    marginHorizontal: 5,
+    justifyContent: 'center',
   },
   cancelButton: {
-    backgroundColor: '#f0f0f0',
+    backgroundColor: theme.colors.card,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
   },
   confirmButton: {
-    backgroundColor: '#007AFF',
+    shadowColor: theme.colors.primary,
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
   },
   buttonText: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: theme.typography.fontSizes.lg,
+    fontFamily: theme.typography.fonts.bold,
   },
   cancelButtonText: {
-    color: '#333',
+    color: theme.colors.text,
   },
   confirmButtonText: {
-    color: '#fff',
+    color: theme.colors.white,
   },
 });
 

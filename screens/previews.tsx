@@ -13,6 +13,7 @@ import {fetchDeployments, Deployment} from '../utils/previews';
 import {PreviewCard} from '../components/previews';
 import ProgressModal from '../components/previews/progressModal';
 import ConfirmationModal from '../components/previews/confirmationModal';
+import {theme} from '../theme';
 
 function PreviewsScreen(): React.JSX.Element {
   const [deployments, setDeployments] = useState<Deployment[]>([]);
@@ -143,7 +144,7 @@ function PreviewsScreen(): React.JSX.Element {
   if (loading) {
     return (
       <View style={styles.centerContainer}>
-        <ActivityIndicator size="large" color="#007AFF" />
+        <ActivityIndicator size="large" color={theme.colors.primary} />
         <Text style={styles.loadingText}>Loading deployments...</Text>
       </View>
     );
@@ -168,7 +169,7 @@ function PreviewsScreen(): React.JSX.Element {
           placeholder="Search deployments..."
           value={searchQuery}
           onChangeText={setSearchQuery}
-          placeholderTextColor="#999"
+          placeholderTextColor={theme.colors.placeholder}
         />
         {searchQuery.length > 0 && (
           <Text style={styles.resultCount}>
@@ -215,58 +216,64 @@ function PreviewsScreen(): React.JSX.Element {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: theme.colors.background,
   },
   centerContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#fff',
-    padding: 20,
+    backgroundColor: theme.colors.background,
+    padding: theme.metrics.spacing.lg,
   },
   searchContainer: {
-    backgroundColor: '#fff',
-    padding: 15,
+    backgroundColor: theme.colors.surface,
+    padding: theme.metrics.spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    borderBottomColor: theme.colors.border,
   },
   searchInput: {
-    backgroundColor: '#f5f5f5',
-    borderRadius: 8,
-    padding: 12,
-    fontSize: 16,
-    color: '#000',
+    backgroundColor: theme.colors.card,
+    borderRadius: theme.metrics.radii.md,
+    padding: theme.metrics.spacing.md,
+    fontSize: theme.typography.fontSizes.lg,
+    fontFamily: theme.typography.fonts.regular,
+    color: theme.colors.text,
   },
   resultCount: {
-    marginTop: 8,
-    fontSize: 12,
-    color: '#666',
+    marginTop: theme.metrics.spacing.sm,
+    fontSize: theme.typography.fontSizes.sm,
+    fontFamily: theme.typography.fonts.regular,
+    color: theme.colors.textSecondary,
   },
   scrollView: {
     flex: 1,
   },
   scrollContent: {
-    padding: 15,
+    padding: theme.metrics.spacing.md,
   },
   loadingText: {
-    marginTop: 12,
-    fontSize: 16,
-    color: '#666',
+    marginTop: theme.metrics.spacing.md,
+    fontSize: theme.typography.fontSizes.lg,
+    fontFamily: theme.typography.fonts.regular,
+    color: theme.colors.textSecondary,
   },
   errorText: {
-    fontSize: 16,
-    color: '#FF3B30',
+    fontSize: theme.typography.fontSizes.lg,
+    fontFamily: theme.typography.fonts.semiBold,
+    color: theme.colors.error,
     textAlign: 'center',
-    marginBottom: 12,
+    marginBottom: theme.metrics.spacing.md,
   },
   retryText: {
-    fontSize: 14,
-    color: '#007AFF',
+    fontSize: theme.typography.fontSizes.md,
+    fontFamily: theme.typography.fonts.medium,
+    color: theme.colors.primary,
     textDecorationLine: 'underline',
   },
   emptyText: {
-    fontSize: 16,
-    color: '#666',
+    fontSize: theme.typography.fontSizes.lg,
+    fontFamily: theme.typography.fonts.regular,
+    color: theme.colors.textSecondary,
     textAlign: 'center',
   },
 });

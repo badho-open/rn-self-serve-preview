@@ -1,7 +1,9 @@
 import React from 'react';
 import {View, Text, StyleSheet, TouchableOpacity} from 'react-native';
+import LinearGradient from 'react-native-linear-gradient';
 import {Deployment} from '../../utils/previews';
 import {formatSize} from '../../utils/format';
+import {theme} from '../../theme';
 
 interface PreviewCardProps {
   deployment: Deployment;
@@ -25,6 +27,11 @@ const PreviewCard: React.FC<PreviewCardProps> = ({
     <View style={styles.card}>
       <View style={styles.cardHeader}>
         <Text style={styles.cardTitle}>{deployment.name}</Text>
+        {isCurrentDeployment && (
+          <View style={styles.activeBadge}>
+            <Text style={styles.activeBadgeText}>Active</Text>
+          </View>
+        )}
       </View>
 
       {hasPackage ? (
@@ -58,12 +65,15 @@ const PreviewCard: React.FC<PreviewCardProps> = ({
 
           {!isCurrentDeployment && (
             <TouchableOpacity
-              style={styles.switchButton}
               onPress={() => onSwitchDeployment(deployment.key)}
-              activeOpacity={0.7}>
-              <Text style={styles.switchButtonText}>
-                Switch to this Preview
-              </Text>
+              activeOpacity={0.8}>
+              <LinearGradient
+                colors={[theme.colors.gradientStart, theme.colors.gradientEnd]}
+                style={styles.switchButton}>
+                <Text style={styles.switchButtonText}>
+                  Switch to this Preview
+                </Text>
+              </LinearGradient>
             </TouchableOpacity>
           )}
 
@@ -74,8 +84,18 @@ const PreviewCard: React.FC<PreviewCardProps> = ({
             ]}
             onPress={onToggle}
             activeOpacity={0.7}>
-            <Text style={styles.accordionHeaderText}>View Details</Text>
-            <View style={styles.accordionIconContainer}>
+            <Text
+              style={[
+                styles.accordionHeaderText,
+                isExpanded && styles.accordionHeaderTextExpanded,
+              ]}>
+              View Details
+            </Text>
+            <View
+              style={[
+                styles.accordionIconContainer,
+                isExpanded && styles.accordionIconContainerExpanded,
+              ]}>
               <Text style={styles.accordionIcon}>{isExpanded ? '▼' : '▶'}</Text>
             </View>
           </TouchableOpacity>
@@ -111,134 +131,163 @@ const PreviewCard: React.FC<PreviewCardProps> = ({
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#fff',
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 16,
-    shadowColor: '#000',
+    backgroundColor: theme.colors.surface,
+    borderRadius: theme.metrics.radii.lg,
+    padding: theme.metrics.spacing.lg,
+    marginBottom: theme.metrics.spacing.md,
+    shadowColor: theme.colors.black,
     shadowOffset: {
       width: 0,
-      height: 4,
+      height: 8,
     },
-    shadowOpacity: 0.08,
-    shadowRadius: 12,
-    elevation: 5,
+    shadowOpacity: 0.1,
+    shadowRadius: 16,
+    elevation: 10,
     borderWidth: 1,
-    borderColor: '#f0f0f0',
+    borderColor: theme.colors.border,
   },
   cardHeader: {
-    marginBottom: 20,
-    paddingBottom: 16,
-    borderBottomWidth: 2,
-    borderBottomColor: '#f5f5f5',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: theme.metrics.spacing.lg,
+    paddingBottom: theme.metrics.spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.border,
   },
   cardTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#1a1a1a',
+    fontSize: theme.typography.fontSizes['2xl'],
+    fontFamily: theme.typography.fonts.bold,
+    color: theme.colors.text,
     letterSpacing: -0.3,
   },
+  activeBadge: {
+    backgroundColor: theme.colors.success,
+    borderRadius: theme.metrics.radii.sm,
+    paddingVertical: theme.metrics.spacing.xs,
+    paddingHorizontal: theme.metrics.spacing.sm,
+  },
+  activeBadgeText: {
+    color: theme.colors.white,
+    fontSize: theme.typography.fontSizes.sm,
+    fontFamily: theme.typography.fonts.semiBold,
+  },
   infoGrid: {
-    gap: 16,
+    gap: theme.metrics.spacing.md,
   },
   infoItem: {
     marginBottom: 0,
   },
   label: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: '#8e8e93',
-    marginBottom: 6,
+    fontSize: theme.typography.fontSizes.sm,
+    fontFamily: theme.typography.fonts.medium,
+    color: theme.colors.textSecondary,
+    marginBottom: theme.metrics.spacing.xs,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
   value: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#1a1a1a',
+    fontSize: theme.typography.fontSizes.lg,
+    fontFamily: theme.typography.fonts.semiBold,
+    color: theme.colors.text,
     lineHeight: 22,
   },
   switchButton: {
-    marginTop: 16,
-    backgroundColor: '#007AFF',
-    borderRadius: 10,
-    paddingVertical: 14,
+    marginTop: theme.metrics.spacing.lg,
+    borderRadius: theme.metrics.radii.md,
+    paddingVertical: theme.metrics.spacing.md,
     alignItems: 'center',
+    shadowColor: theme.colors.primary,
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
   },
   switchButtonText: {
-    color: '#fff',
-    fontSize: 15,
-    fontWeight: '600',
+    color: theme.colors.white,
+    fontSize: theme.typography.fontSizes.lg,
+    fontFamily: theme.typography.fonts.bold,
   },
   noPackageContainer: {
-    padding: 20,
-    backgroundColor: '#f9f9f9',
-    borderRadius: 12,
+    padding: theme.metrics.spacing.lg,
+    backgroundColor: theme.colors.card,
+    borderRadius: theme.metrics.radii.lg,
     alignItems: 'center',
   },
   noPackageText: {
-    fontSize: 14,
-    color: '#8e8e93',
+    fontSize: theme.typography.fontSizes.md,
+    color: theme.colors.textSecondary,
+    fontFamily: theme.typography.fonts.regular,
     fontStyle: 'italic',
   },
   accordionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 14,
-    paddingHorizontal: 12,
-    marginTop: 16,
-    backgroundColor: '#f8f9fa',
-    borderRadius: 10,
+    paddingVertical: theme.metrics.spacing.md,
+    paddingHorizontal: theme.metrics.spacing.md,
+    marginTop: theme.metrics.spacing.lg,
+    backgroundColor: theme.colors.card,
+    borderRadius: theme.metrics.radii.md,
     borderWidth: 1,
-    borderColor: '#e9ecef',
+    borderColor: theme.colors.border,
   },
   accordionHeaderExpanded: {
-    backgroundColor: '#f0f7ff',
-    borderColor: '#007AFF',
+    backgroundColor: theme.colors.primary,
+    borderColor: theme.colors.primary,
   },
   accordionHeaderText: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#007AFF',
+    fontSize: theme.typography.fontSizes.lg,
+    fontFamily: theme.typography.fonts.semiBold,
+    color: theme.colors.primary,
     letterSpacing: -0.2,
+  },
+  accordionHeaderTextExpanded: {
+    color: theme.colors.white,
   },
   accordionIconContainer: {
     width: 24,
     height: 24,
     borderRadius: 12,
-    backgroundColor: '#007AFF',
+    backgroundColor: theme.colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
   },
+  accordionIconContainerExpanded: {
+    backgroundColor: theme.colors.white,
+  },
   accordionIcon: {
     fontSize: 10,
-    color: '#fff',
-    fontWeight: 'bold',
+    color: theme.colors.white,
+    fontFamily: theme.typography.fonts.bold,
   },
   accordionContent: {
-    paddingTop: 16,
-    paddingHorizontal: 4,
-    gap: 16,
+    paddingTop: theme.metrics.spacing.lg,
+    paddingHorizontal: theme.metrics.spacing.xs,
+    gap: theme.metrics.spacing.md,
   },
   detailSection: {
-    padding: 14,
-    backgroundColor: '#fafafa',
-    borderRadius: 10,
-    borderLeftWidth: 3,
-    borderLeftColor: '#007AFF',
+    padding: theme.metrics.spacing.md,
+    backgroundColor: theme.colors.card,
+    borderRadius: theme.metrics.radii.md,
+    borderLeftWidth: 4,
+    borderLeftColor: theme.colors.primary,
   },
   detailLabel: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: '#8e8e93',
-    marginBottom: 6,
+    fontSize: theme.typography.fontSizes.sm,
+    fontFamily: theme.typography.fonts.medium,
+    color: theme.colors.textSecondary,
+    marginBottom: theme.metrics.spacing.xs,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
   detailValue: {
-    fontSize: 15,
-    color: '#1a1a1a',
+    fontSize: theme.typography.fontSizes.md,
+    fontFamily: theme.typography.fonts.regular,
+    color: theme.colors.text,
     lineHeight: 22,
   },
 });
