@@ -1,14 +1,72 @@
-This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
+# Self-Serve Feature Previews for React Native
 
-# Getting Started
+This repository contains the frontend reference implementation for a self-serve, on-demand feature preview system for React Native apps using Over-the-Air (OTA) updates.
 
->**Note**: Make sure you have completed the [React Native - Environment Setup](https://reactnative.dev/docs/environment-setup) instructions till "Creating a new application" step, before proceeding.
+## 🎥 Live Demo
 
-## Step 1: Start the Metro Server
+Watch the video below to see the "Preview Selector" screen in action. You will see us switch instantly between the Production build and two active feature branches without reinstalling the app or downloading a new APK.
 
-First, you will need to start **Metro**, the JavaScript _bundler_ that ships _with_ React Native.
+**[Live Demo: Self Feature Preview with React Native OTAs](https://youtube.com/shorts/7gW_R8ga67Y?feature=share)**
 
-To start Metro, run the following command from the _root_ of your React Native project:
+In the video, we demonstrate:
+
+- **Instant Switching:** Selecting a branch triggers an immediate OTA update.
+- **The Result:** The app restarts, and the Home Page background changes color, proving that the specific code for that feature branch has been loaded successfully.
+- **Feature Branches Shown:**
+  1. `DEVELOP-01`: Home Page background changes to a green gradient.
+  2. `DEVELOP-02`: Home Page background changes to a pinkish gradient.
+
+This workflow empowers Product Managers to preview in-development features without having to rely on developers.
+
+---
+
+## The Problem: The "Preview Bottleneck"
+
+High-velocity mobile teams often face the "Preview Bottleneck":
+
+- **Developers** spend excessive time generating builds and hosting demos, leading to constant context switching and lost productivity.
+- **Product Managers** and stakeholders feel sidelined, unable to access in-development features without interrupting a developer. This dependency causes delays and late-stage feedback, resulting in rework and frustration.
+
+## The Solution: Self-Serve, On-Demand Feature Previews
+
+We built a system that allows anyone on the team to preview active feature branches on-demand. A PM can open our Staging App, see a list of feature branches, and tap a button to load that specific version of the app's code via an OTA update.
+
+### Why OTA Bundles over Native Artefacts?
+
+- **Speed:** Creating OTA bundles takes 3-4 minutes, while a native build (APK/IPA) can take 15-20 minutes.
+- **Cost:** OTA bundles for iOS can be created on standard Linux runners in CI/CD, which are cheaper than the macOS runners required for full iOS builds.
+- **The 95% Rule:** Most feature work in a mature app happens at the JavaScript level. We reserve native builds for the 5% of cases that involve native code changes and use OTA for the other 95%.
+
+## Architecture
+
+We use a feature-based OTA deployment architecture. Every feature branch gets its own deployment channel.
+
+1.  A developer pushes code to a feature branch (e.g., `DEVELOP-123/feat/new-payment-flow`).
+2.  GitHub Actions detects the push and triggers a workflow that bundles the JavaScript.
+3.  The bundle is deployed to an OTA channel named after the branch (e.g., `DEVELOP-123/feat/new-payment-flow`).
+4.  Stakeholders can then select this channel from the "Previews" screen in the Staging App to load the feature instantly.
+
+## Implementation
+
+This repository contains the React Native frontend implementation.
+
+- **Backend Repository:** [rn-self-serve-preview-server](https://github.com/badho-open/rn-self-serve-preview-server)
+
+The solution consists of three main parts:
+
+1.  **Backend:** A simple Node.js/Express server that fetches the list of active OTA deployments from the cloud service (e.g., Revopush or CodePush) and serves them to the app.
+2.  **Automation (CI/CD):** A GitHub Actions workflow that automatically builds and deploys the JS bundle to the correct OTA channel on every push to a feature branch.
+3.  **Frontend (This App):** A "Preview Selector" screen (`screens/previews.tsx`) that lists available feature branches and allows the user to switch between them.
+
+---
+
+## Getting Started with this Project
+
+> **Note**: Make sure you have completed the [React Native - Environment Setup](https://reactnative.dev/docs/environment-setup) instructions.
+
+### Step 1: Start the Metro Server
+
+First, you will need to start **Metro**, the JavaScript bundler that ships with React Native.
 
 ```bash
 # using npm
@@ -18,11 +76,11 @@ npm start
 yarn start
 ```
 
-## Step 2: Start your Application
+### Step 2: Start your Application
 
-Let Metro Bundler run in its _own_ terminal. Open a _new_ terminal from the _root_ of your React Native project. Run the following command to start your _Android_ or _iOS_ app:
+Let Metro Bundler run in its own terminal. Open a new terminal from the root of your React Native project. Run the following command to start your Android or iOS app:
 
-### For Android
+#### For Android
 
 ```bash
 # using npm
@@ -32,7 +90,7 @@ npm run android
 yarn android
 ```
 
-### For iOS
+#### For iOS
 
 ```bash
 # using npm
@@ -42,38 +100,4 @@ npm run ios
 yarn ios
 ```
 
-If everything is set up _correctly_, you should see your new app running in your _Android Emulator_ or _iOS Simulator_ shortly provided you have set up your emulator/simulator correctly.
-
-This is one way to run your app — you can also run it directly from within Android Studio and Xcode respectively.
-
-## Step 3: Modifying your App
-
-Now that you have successfully run the app, let's modify it.
-
-1. Open `App.tsx` in your text editor of choice and edit some lines.
-2. For **Android**: Press the <kbd>R</kbd> key twice or select **"Reload"** from the **Developer Menu** (<kbd>Ctrl</kbd> + <kbd>M</kbd> (on Window and Linux) or <kbd>Cmd ⌘</kbd> + <kbd>M</kbd> (on macOS)) to see your changes!
-
-   For **iOS**: Hit <kbd>Cmd ⌘</kbd> + <kbd>R</kbd> in your iOS Simulator to reload the app and see your changes!
-
-## Congratulations! :tada:
-
-You've successfully run and modified your React Native App. :partying_face:
-
-### Now what?
-
-- If you want to add this new React Native code to an existing application, check out the [Integration guide](https://reactnative.dev/docs/integration-with-existing-apps).
-- If you're curious to learn more about React Native, check out the [Introduction to React Native](https://reactnative.dev/docs/getting-started).
-
-# Troubleshooting
-
-If you can't get this to work, see the [Troubleshooting](https://reactnative.dev/docs/troubleshooting) page.
-
-# Learn More
-
-To learn more about React Native, take a look at the following resources:
-
-- [React Native Website](https://reactnative.dev) - learn more about React Native.
-- [Getting Started](https://reactnative.dev/docs/environment-setup) - an **overview** of React Native and how setup your environment.
-- [Learn the Basics](https://reactnative.dev/docs/getting-started) - a **guided tour** of the React Native **basics**.
-- [Blog](https://reactnative.dev/blog) - read the latest official React Native **Blog** posts.
-- [`@facebook/react-native`](https://github.com/facebook/react-native) - the Open Source; GitHub **repository** for React Native.
+If everything is set up correctly, you should see the app running in your Android Emulator or iOS Simulator.
