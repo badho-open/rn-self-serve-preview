@@ -6,7 +6,7 @@ This repository contains the frontend reference implementation for a self-serve,
 
 Watch the video below to see the "Preview Selector" screen in action. You will see us switch instantly between the Production build and two active feature branches without reinstalling the app or downloading a new APK.
 
-**[Live Demo: Self Feature Preview with React Native OTAs](https://youtube.com/shorts/7gW_R8ga67Y?feature=share)**
+[![Live Demo: Self Feature Preview with React Native OTAs](https://img.youtube.com/vi/7gW_R8ga67Y/hqdefault.jpg)](https://youtube.com/shorts/7gW_R8ga67Y?feature=share)
 
 In the video, we demonstrate:
 
